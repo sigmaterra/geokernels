@@ -23,10 +23,9 @@ if __name__ == "__main__":
           long_description_content_type='text/markdown',
           license           = 'MIT',
           install_requires  = ['scikit_learn>=1.0',
-                                'numba >= 0.53'],
-          python_requires   = '>=3.6',
-          packages          = ['sklearn_geokernels',
-                                'tests'],
+                                'numba>=0.53'],
+          python_requires   = '>=3.8',
+          packages          = ['geokernels'],
           classifiers       = ['Programming Language :: Python :: 3',
                                 'Operating System :: OS Independent',
                                ]
