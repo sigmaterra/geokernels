@@ -68,27 +68,30 @@ def test_gp(kernel_name = 'RBF_geo', n_samples= 200, plot=True):
     X, y = make_simdata1(n_samples, noise = 0.2, random_state =0)
     # Convert X to Latitude and Longitude coordinates in degree
     X[:,0:2] *= 180/np.pi
-    # split in train and test set
+     # split in train and test set
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
     # test anisotropic length_scale
     if kernel_name == 'RBF_geo':
         print('Test: RBF_geo')
-        kernel = 1.0 * RBF_geo(length_scale = [1e5,1], 
-        length_scale_bounds = [(1e4, 1e7),(0.1, 1e4)]) + WhiteKernel(noise_level_bounds=(1e-3, 1e2))
+        kernel = 1.0 * RBF_geo(length_scale = [1e6,1], 
+        length_scale_bounds = [(1e4, 1e7),(1, 1e4)]) + WhiteKernel(noise_level_bounds=(1e-3, 1e1))
     elif kernel_name == 'Matern_geo':
         print('Test: Matern_geo')
-        kernel = 1.0 * Matern_geo(length_scale = [1e5,1], 
-        length_scale_bounds = [(1e4, 1e7),(0.1, 1e4)]) + WhiteKernel(noise_level_bounds=(1e-3, 1e2))
+        kernel = 1.0 * Matern_geo(length_scale = [1e6,1], 
+        length_scale_bounds = [(1e4, 1e7),(0.1, 1e4)]) + WhiteKernel(noise_level_bounds=(1e-3, 1e1))
     elif kernel_name == 'RationalQuadratic_geo':
+        X[:,2] *= 1e6
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
         print('Test: RationalQuadratic_geo')
-        kernel = 1.0 * RationalQuadratic_geo(length_scale = 1, 
-        length_scale_bounds = (1e-1, 1e4)) + WhiteKernel(noise_level_bounds=(1e-3, 1e2))
+        kernel = 1.0 * RationalQuadratic_geo(length_scale = 1e5, 
+        length_scale_bounds = (1e2, 1e7)) + WhiteKernel(noise_level_bounds=(1e-3, 1e1))
     else:
         print(f'Kernel name {kernel_name} not accepted. \
             Please choose from: RBF_geo, Matern_geo, or RationalQuadratic_geo.')
     #kernel = 1.0 * RBF(length_scale = [1,1,1], length_scale_bounds = (0.1, 1e4)) + WhiteKernel(noise_level_bounds=(1e-3, 1e2))
+    #kernel = 1.0 * RationalQuadratic(length_scale = 1e5, length_scale_bounds = (1e2, 1e7)) + WhiteKernel(noise_level_bounds=(1e-3, 1e2))
     start = timeit.default_timer()
-    gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=3)
+    gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=10)
     gp.fit(X_train, y_train)
     fitstop = timeit.default_timer()
     print(f'Fitting time: {(fitstop - start):.2f} seconds')
@@ -142,5 +145,7 @@ def test_Quadratic_geo():
 
 
 if __name__ == '__main__':
-    res_ok = test_gp()
-    assert res_ok
+    test_RBF_geo()
+    test_Matern_geo()
+    test_Quadratic_geo()
+    print('All tests passed')
