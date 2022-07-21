@@ -1681,21 +1681,6 @@ class RBF_geo(StationaryKernelMixin, NormalizedKernelMixin, Kernel):
         If set to "fixed", 'length_scale' cannot be changed during
         hyperparameter tuning.
 
-
-    Examples
-    --------
-    >>> from sklearn.datasets import load_iris
-    >>> from sklearn.gaussian_process import GaussianProcessClassifier
-    >>> from sklearn.gaussian_process.kernels import RBF
-    >>> X, y = load_iris(return_X_y=True)
-    >>> kernel = 1.0 * RBF(1.0)
-    >>> gpc = GaussianProcessClassifier(kernel=kernel,
-    ...         random_state=0).fit(X, y)
-    >>> gpc.score(X, y)
-    0.9866...
-    >>> gpc.predict_proba(X[:2,:])
-    array([[0.8354..., 0.03228..., 0.1322...],
-           [0.7906..., 0.0652..., 0.1441...]])
     """
 
     def __init__(self, length_scale=1.0, length_scale_bounds=(1e-5, 1e5)):
@@ -2060,26 +2045,6 @@ class Matern_geo(RBF):
         Bessel function. Furthermore, in contrast to l, nu is kept fixed to
         its initial value and not optimized.
 
-    References
-    ----------
-    .. [1] `Carl Edward Rasmussen, Christopher K. I. Williams (2006).
-        "Gaussian Processes for Machine Learning". The MIT Press.
-        <http://www.gaussianprocess.org/gpml/>`_
-
-    Examples
-    --------
-    >>> from sklearn.datasets import load_iris
-    >>> from sklearn.gaussian_process import GaussianProcessClassifier
-    >>> from sklearn.gaussian_process.kernels import Matern
-    >>> X, y = load_iris(return_X_y=True)
-    >>> kernel = 1.0 * Matern(length_scale=1.0, nu=1.5)
-    >>> gpc = GaussianProcessClassifier(kernel=kernel,
-    ...         random_state=0).fit(X, y)
-    >>> gpc.score(X, y)
-    0.9866...
-    >>> gpc.predict_proba(X[:2,:])
-    array([[0.8513..., 0.0368..., 0.1117...],
-            [0.8086..., 0.0693..., 0.1220...]])
     """
 
     def __init__(self, length_scale=1.0, length_scale_bounds=(1e-5, 1e5), nu=1.5):
@@ -2413,26 +2378,6 @@ class RationalQuadratic_geo(StationaryKernelMixin, NormalizedKernelMixin, Kernel
         If set to "fixed", 'alpha' cannot be changed during
         hyperparameter tuning.
 
-    References
-    ----------
-    .. [1] `David Duvenaud (2014). "The Kernel Cookbook:
-        Advice on Covariance functions".
-        <https://www.cs.toronto.edu/~duvenaud/cookbook/>`_
-
-    Examples
-    --------
-    >>> from sklearn.datasets import load_iris
-    >>> from sklearn.gaussian_process import GaussianProcessClassifier
-    >>> from sklearn.gaussian_process.kernels import RationalQuadratic
-    >>> X, y = load_iris(return_X_y=True)
-    >>> kernel = RationalQuadratic(length_scale=1.0, alpha=1.5)
-    >>> gpc = GaussianProcessClassifier(kernel=kernel,
-    ...         random_state=0).fit(X, y)
-    >>> gpc.score(X, y)
-    0.9733...
-    >>> gpc.predict_proba(X[:2,:])
-    array([[0.8881..., 0.0566..., 0.05518...],
-            [0.8678..., 0.0707... , 0.0614...]])
     """
 
     def __init__(
