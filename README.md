@@ -56,8 +56,8 @@ python -m pip install geokernels
 from sklearn.model_selection import train_test_split
 from sklearn.gaussian_process import GaussianProcessRegressor
 # Import kernels similar to importing sklearn.gaussian_process.kernels :
-from geokernels.sklearn_geokernels.kernels import RBF_geo, Matern_geo, RationalQuadratic_geo, WhiteKernel
-from geokernels.tests.test_kernels import make_simdata1
+from geokernels.kernels import RBF_geo, Matern_geo, RationalQuadratic_geo, WhiteKernel
+from geokernels.test_kernels import make_simdata1
 
 # Add data: needs to include in the first two columns Latitude (first) and Longitude (second) coordinates.
 # for testing use function make_simdata1 to generate 3 dim dataset (first two dimensions are Latitude, Longitude):
