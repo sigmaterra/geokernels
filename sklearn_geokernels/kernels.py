@@ -2491,7 +2491,7 @@ class RationalQuadratic_geo(StationaryKernelMixin, NormalizedKernelMixin, Kernel
         if Y is None:
             dists = (
                 pdist(X[:,:2], metric = lambda u, v: geodesic_vincenty(u, v))**2 + 
-                pdist(X[:,2:],  metric = 'seuclidean')
+                pdist(X[:,2:],  metric = 'sqeuclidean')
             )
             dists = squareform(dists)
             tmp = dists / (2 * self.alpha * self.length_scale**2)
@@ -2503,7 +2503,7 @@ class RationalQuadratic_geo(StationaryKernelMixin, NormalizedKernelMixin, Kernel
                 raise ValueError("Gradient can only be evaluated when Y is None.")
             dists = (
                     cdist(X[:,:2], Y[:,:2], metric = lambda u, v: geodesic_vincenty(u, v))**2 +
-                        cdist(X[:,2:], Y[:,2:],  metric = 'seuclidean')
+                        cdist(X[:,2:], Y[:,2:],  metric = 'sqeuclidean')
                 )
             K = (1 + dists / (2 * self.alpha * self.length_scale**2)) ** -self.alpha
 
