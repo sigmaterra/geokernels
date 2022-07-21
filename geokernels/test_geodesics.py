@@ -5,7 +5,7 @@ import numpy as np
 from scipy.spatial.distance import pdist, cdist
 
 # import functions from geokernels package
-from ..sklearn_geokernels.geodesics import geodesic_vincenty, geodist_dimwise
+from geodesics import geodesic_vincenty, geodist_dimwise
 
 
 def gen_testdata(nsample = 100):

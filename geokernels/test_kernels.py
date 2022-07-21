@@ -11,10 +11,8 @@ except:
     print('WARNING: Plotting not available. Install matplotlib for plotting test results.')
     _plot = False
 
-# import functions from geokernels package
-from ..sklearn_geokernels.geodesics import geodesic_vincenty
-# import geodesic kernels from sklearn_geokernels (as drop in for sklearn.gaussian_process.kernels):
-from ..sklearn_geokernels.kernels import RBF_geo, Matern_geo, RationalQuadratic_geo, WhiteKernel, RBF, Matern
+# import geodesic kernels from geokernels package (as drop in for sklearn.gaussian_process.kernels):
+from kernels import RBF_geo, Matern_geo, RationalQuadratic_geo, WhiteKernel, RBF, Matern
 
 
 def make_simdata1(n_samples, noise = 0., random_state = None):
