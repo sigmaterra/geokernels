@@ -12,10 +12,9 @@ except:
     _plot = False
 
 # import functions from geokernels package
-sys.path.append('..')
-from sklearn_geokernels.geodesics import geodesic_vincenty
+from ..sklearn_geokernels.geodesics import geodesic_vincenty
 # import geodesic kernels from sklearn_geokernels (as drop in for sklearn.gaussian_process.kernels):
-from sklearn_geokernels.kernels import RBF_geo, Matern_geo, RationalQuadratic_geo, WhiteKernel, RBF, Matern
+from ..sklearn_geokernels.kernels import RBF_geo, Matern_geo, RationalQuadratic_geo, WhiteKernel, RBF, Matern
 
 
 def make_simdata1(n_samples, noise = 0., random_state = None):
@@ -49,6 +48,8 @@ def make_simdata1(n_samples, noise = 0., random_state = None):
     X[:,1] = (X[:,1] - 0.5) * 0.1 * np.pi
     #X[:, 2] = X[:, 2] * 1.0
     y = 10 * np.sin(np.pi * X[:, 0] * X[:, 1]) + 20 * (X[:, 2] - 0.5) ** 2 + noise * np.random.rand(n_samples)
+    # Convert X to Latitude and Longitude coordinates in degrees
+    X[:,0:2] *= 180/np.pi
     return X, y
 
 
@@ -66,8 +67,6 @@ def test_gp(kernel_name = 'RBF_geo', n_samples= 200, plot=True):
     """
     # Generate test data
     X, y = make_simdata1(n_samples, noise = 0.2, random_state =0)
-    # Convert X to Latitude and Longitude coordinates in degree
-    X[:,0:2] *= 180/np.pi
      # split in train and test set
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
     # test anisotropic length_scale
