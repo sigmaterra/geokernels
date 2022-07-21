@@ -41,6 +41,20 @@ def test_geodesic_vincenty():
     return dist
 
 
+def test_geodist_dimwise():
+    """
+    Test the pairwise geodesic distances between the data for each dimension.
+    """
+    X = gen_testdata()
+    start = timeit.default_timer()
+    dist = geodist_dimwise(X)
+    stop = timeit.default_timer()
+    print(f'Time for dimension-wsie distance matrix computation: {(stop - start):.3f} seconds')
+    assert dist.shape[0] == dist.shape[1] == X.shape[0] 
+    assert dist.shape[2] ==  X.shape[1] - 1
+    return dist
+
+
 def test_geodesic_geopy():
     """
     Test the geodesic distance computation using geopy.
@@ -80,3 +94,11 @@ def test_geodesic_geographiclib():
     print(f'Time for distance matrix computation: {(stop - start):.3f} seconds')
     assert np.size(dist) == X.shape[0] * (X.shape[0] - 1) / 2
     return dist
+
+
+if __name__ == '__main__':
+    dist = test_geodesic_vincenty()
+    dist = test_geodist_dimwise()
+    #dist = test_geodesic_geopy()
+    #dist = test_geodesic_geographiclib()
+    print('All tests passed')
