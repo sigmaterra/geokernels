@@ -1,16 +1,17 @@
 try:
-    from setuptools import setup
+    from setuptools import setup, find_packages
 except ImportError:
     from distutils.core import setup
 from os import path
 import io
 
-## in development set version
-PYPI_VERSION = '0.1.1'
+PYPI_VERSION = '0.1.3'
 
 this_directory = path.abspath(path.dirname(__file__))
 with io.open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
+
+packages = find_packages()
 
 if __name__ == "__main__":
     setup(name = 'geokernels',
