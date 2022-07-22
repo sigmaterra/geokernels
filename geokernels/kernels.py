@@ -66,7 +66,7 @@ from sklearn.exceptions import ConvergenceWarning
 
 import warnings
 
-from geodesics import geodesic_vincenty, geodist_dimwise
+from .geodesics import geodesic_vincenty, geodist_dimwise
 
 
 def _check_length_scale(X, length_scale):
