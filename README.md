@@ -41,7 +41,7 @@ of length-scales is one less than the number of dimensions of the data.
 ## Installation
 
 ``` sh
-python -m pip install geokernels
+pip install geokernels
 ```
 
 ## Requirements
@@ -80,6 +80,24 @@ gp.fit(X_train, y_train)
 # Make predictions on test data
 y_pred, y_std = gp.predict(X_test, return_std=True)
 gp.score(X_test, y_test)
+```
+
+## Testing
+
+Test functions and more examples can be found in geokernels.test_geodesics and geokernels.test_kernels. 
+
+Test for all kernels:
+``` python
+from geokernels.test_kernels import test_allkernels
+test_allkernels()
+```
+Comparison between geokernel's geodesic distance implementation and geographiclib/geopy:
+(Note that this requires installation of at least geographiclib: pip install geographiclib)
+``` python
+from geokernels.test_geodesics import test_geodesic_vincenty, test_geodesic_geographiclib, test_accuracy
+dist_vincenty = test_geodesic_vincenty()
+dist_geographiclib = test_geodesic_geographiclib()
+test_accuracy()
 ```
 
 ## References
