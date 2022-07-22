@@ -25,7 +25,7 @@ References:
 # Author: Sebastian Haan
 
 import numpy as np
-from scipy.spatial.distance import pdist, cdist
+from scipy.spatial.distance import pdist, cdist, squareform
 
 from .geodesics import geodesic_vincenty
 
@@ -62,19 +62,15 @@ def geodist(coords1, coords2, metric = 'meter'):
     elif metric == 'nmi':
         conv_fac = 1 / 1852.
     else:
-        print(f'Metric {metric} not supported')
-        return None
+        raise ValueError(f'Metric {metric} not supported')
     if np.size(coords1) == 2:
         return geodesic_vincenty(coords1, coords2) * conv_fac
     if coords1.shape[1] != 2:
-        print('coords1 and coords2 must have at two dimensions: Latitude, Longitude ')
-        return None
+        raise ValueError('coords1 and coords2 must have at two dimensions: Latitude, Longitude ')
     if (abs(coords1[:,0]) > 90).any() | (abs(coords2[:,0]) > 90).any():
-        print('First dimension must be Latitude: -90 < lat < 90')
-        return None
+        raise ValueError('First dimension must be Latitude: -90 < lat < 90')
     if (abs(coords1[:,1]) > 180).any() | (abs(coords2[:,1]) > 180).any():
-        print('Second dimension must be Longitude: -180 < long < 180')
-        return None
+        raise ValueError('Second dimension must be Longitude: -180 < long < 180')
     n_points = len(coords1)
     dist = np.asarray([geodesic_vincenty(coords1[i], coords2[i]) for i in range(n_points)])
     return dist * conv_fac
@@ -119,27 +115,22 @@ def geodist_matrix(coords1, coords2 = None, metric = 'meter'):
         return None
     coords1 = np.asarray(coords1)
     if coords1.shape[1] != 2:
-        print('coords1 and coords2 must have at two dimensions: Latitude, Longitude ')
-        return None
+        raise ValueError('coords1 and coords2 must have at two dimensions: Latitude, Longitude')
     if (abs(coords1[:,0]) > 90).any():
-        print('First dimension must be Latitude: -90 < lat < 90')
-        return None
+        raise ValueError('First dimension must be Latitude: -90 < lat < 90')
     if (abs(coords1[:,1]) > 180).any():
-        print('Second dimension must be Longitude: -180 < lng < 180')
-        return None
-    if coords2 == None:
+        raise ValueError('Second dimension must be Longitude: -180 < lng < 180')
+    if coords2 is None:
+        coords2 = np.asarray(coords2)
         # if only one list of coordinates is given:
-        dist = pdist(X, metric = lambda u, v: geodesic_vincenty(u, v))
+        dist = pdist(coords1, metric = lambda u, v: geodesic_vincenty(u, v))
         dist = squareform(dist)
-        np.fill_diagonal(dist, 1)
     else:
         # if two lists of coordinates are given
         assert coords1.shape == coords2.shape
         if (abs(coords2[:,0]) > 90).any():
-            print('First dimension must be Latitude: -90 < lat < 90')
-            return None
+            raise ValueError('First dimension must be Latitude: -90 < lat < 90')
         if (abs(coords2[:,1]) > 180).any():
-            print('Second dimension must be Longitude: -180 < lng < 180')
-            return None
-        dist = cdist(X, Y, metric = lambda u, v: geodesic_vincenty(u, v))
+            raise ValueError('Second dimension must be Longitude: -180 < lng < 180')
+        dist = cdist(coords1, coords2, metric = lambda u, v: geodesic_vincenty(u, v))
     return dist * conv_fac
