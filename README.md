@@ -93,6 +93,4 @@ gp.score(X_test, y_test)
 
 ## Contributors
 
-Written by:
-
-Sebastian Haan (contact: sebhaan@sigmaterra.com)
+Written by: Sebastian Haan
