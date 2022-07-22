@@ -5,7 +5,7 @@ import numpy as np
 from scipy.spatial.distance import pdist, cdist
 
 # import functions from geokernels package
-from geodesics import geodesic_vincenty, geodist_dimwise
+from .geodesics import geodesic_vincenty, geodist_dimwise
 
 
 def gen_testdata(nsample = 100):
@@ -88,16 +88,42 @@ def test_geodesic_geographiclib():
         return 0
     X = gen_testdata()
     start = timeit.default_timer()
-    dist = pdist(X, metric = lambda u, v: geodesic_geographiclib(u, v))
+    dist = pdist(X, metric = lambda u, v: Geodesic.WGS84.Inverse(u[0], u[1], v[0], v[1])['s12'])
     stop = timeit.default_timer()
     print(f'Time for distance matrix computation: {(stop - start):.3f} seconds')
     assert np.size(dist) == X.shape[0] * (X.shape[0] - 1) / 2
     return dist
 
 
-if __name__ == '__main__':
+def test_accuracy():
+    """
+    Test the accuracy of the geodesic distance computation
+    by comapring Vincenty's to geographiclib's distance.
+    """
+    try:
+        from geographiclib.geodesic import Geodesic
+    except:
+        print("Package geographiclib not found. Please install it using pip install geographiclib")
+        return None
+    X = gen_testdata()
+    dist_vincenty = pdist(X, metric = lambda u, v: geodesic_vincenty(u, v))
+    dist_geographiclib = pdist(X, metric = lambda u, v: Geodesic.WGS84.Inverse(u[0], u[1], v[0], v[1])['s12'])
+    dist_mean = np.mean(np.abs(dist_vincenty - dist_geographiclib))
+    dist_max = np.max(np.abs(dist_vincenty - dist_geographiclib))
+    print(f'Mean distance difference [meters]: {dist_mean:.3e}') 
+    print(f'Max distance difference [meters]: {dist_max:.3e}')
+    # Check that all distances are within relative (absolute) tolerance of 1e-8 (1cm) 
+    assert np.allclose(dist_vincenty, dist_geographiclib, rtol = 1e-05, atol= 1e-03)
+    print('Accuracy test passed.')
+
+
+def test_all():
+    """
+    Run all tests.
+    """
     dist = test_geodesic_vincenty()
     dist = test_geodist_dimwise()
+    test_accuracy()
     #dist = test_geodesic_geopy()
     #dist = test_geodesic_geographiclib()
     print('All tests passed')

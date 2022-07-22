@@ -12,7 +12,7 @@ except:
     _plot = False
 
 # import geodesic kernels from geokernels package (as drop in for sklearn.gaussian_process.kernels):
-from kernels import RBF_geo, Matern_geo, RationalQuadratic_geo, WhiteKernel, RBF, Matern
+from .kernels import RBF_geo, Matern_geo, RationalQuadratic_geo, WhiteKernel, RBF, ConstantKernel
 
 
 def make_simdata1(n_samples, noise = 0., random_state = None):
@@ -69,26 +69,29 @@ def test_gp(kernel_name = 'RBF_geo', n_samples= 200, plot=True):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
     # test anisotropic length_scale
     if kernel_name == 'RBF_geo':
+        print('---------------------------')
         print('Test: RBF_geo')
         kernel = 1.0 * RBF_geo(length_scale = [1e6,1], 
         length_scale_bounds = [(1e4, 1e7),(1, 1e4)]) + WhiteKernel(noise_level_bounds=(1e-3, 1e1))
     elif kernel_name == 'Matern_geo':
-        print('Test: Matern_geo')
+        print('---------------------------')
+        print('Test: Matern_geo')  
         kernel = 1.0 * Matern_geo(length_scale = [1e6,1], 
         length_scale_bounds = [(1e4, 1e7),(0.1, 1e4)]) + WhiteKernel(noise_level_bounds=(1e-3, 1e1))
     elif kernel_name == 'RationalQuadratic_geo':
         X[:,2] *= 1e6
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+        print('---------------------------')
         print('Test: RationalQuadratic_geo')
-        kernel = 1.0 * RationalQuadratic_geo(length_scale = 1e5, 
-        length_scale_bounds = (1e2, 1e7)) + WhiteKernel(noise_level_bounds=(1e-3, 1e1))
+        kernel = ConstantKernel(1, (1e-4, 1e7)) * RationalQuadratic_geo(alpha=10, length_scale = 1e6, 
+        length_scale_bounds = (1e4, 1e8)) + WhiteKernel(noise_level_bounds=(1e-3, 1e1))
     else:
         print(f'Kernel name {kernel_name} not accepted. \
             Please choose from: RBF_geo, Matern_geo, or RationalQuadratic_geo.')
     #kernel = 1.0 * RBF(length_scale = [1,1,1], length_scale_bounds = (0.1, 1e4)) + WhiteKernel(noise_level_bounds=(1e-3, 1e2))
     #kernel = 1.0 * RationalQuadratic(length_scale = 1e5, length_scale_bounds = (1e2, 1e7)) + WhiteKernel(noise_level_bounds=(1e-3, 1e2))
     start = timeit.default_timer()
-    gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=10)
+    gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=5)
     gp.fit(X_train, y_train)
     fitstop = timeit.default_timer()
     print(f'Fitting time: {(fitstop - start):.2f} seconds')
@@ -141,8 +144,12 @@ def test_Quadratic_geo():
     assert res_ok
 
 
-if __name__ == '__main__':
+def test_allkernels():
+    """
+    Test of Gaussian Process regression with all kernels
+    """
     test_RBF_geo()
     test_Matern_geo()
     test_Quadratic_geo()
+    print('----------------')
     print('All tests passed')
