@@ -1,18 +1,25 @@
 """Computation of geospatial distances (WGS84).
 
 The geospatial distance calculation is based on Vincenty's inverse method formula
-(see geokernels.geodesics.geodesic_vincenty).
+and accelerated with Numba (see geokernels.geodesics.geodesic_vincenty and references).
 
 Coordinates are assumed to be in Latitude and Longitude (WGS 84).
 
-geodist: return a list of distances between point to point
-geodist_matrix: returns distance matrix between all possible combinations of 
-pairwise distances.
+Functions included:
+geodist: returns list of distances between points of two lists: 
+dist[i] = distance(XA[i], XB[i])
 
-This implementationprovides a fast computation of geo-spatial distances in comparison to 
+geodist_matrix: returns distance matrix between all possible combinations of 
+pairwise distances (either between all points in one list or points between two lists).
+dist[i,j] = distance(XA[i], XB[j]) or distance(X[i], X[j])
+
+This implementation provides a fast computation of geo-spatial distances in comparison to 
 alternative methods for computing geodesic distance (tested:  geopy and GeographicLib, 
 see geokernels.test_geodesics for test functions).
 
+References:
+
+- https://en.wikipedia.org/wiki/Vincenty's_formulae
 """
 
 # Author: Sebastian Haan
@@ -26,7 +33,7 @@ from .geodesics import geodesic_vincenty
 def geodist(coords1, coords2, metric = 'meter'):
     """
     Return distances between two coordinates or two lists of coordinates.
-    Distances are calculated row by row: dist_i = distance(coord1_i, coord2_i)
+    Distances are calculated as: dist[i] = distance(XA[i], XB[i])
 
     Coordinates are assumed to be in Latitude, Longitude (WGS 84).
 
@@ -76,9 +83,12 @@ def geodist(coords1, coords2, metric = 'meter'):
 def geodist_matrix(coords1, coords2 = None, metric = 'meter'):
     """
     Compute distance between each pair of possible combinations.
+    
     If coords2 = None, compute distance between all possible pair combinations in coords1.
-    if coords2 is given, Compute distance between each possible pair of the two collections 
-    of inputs.
+    dist[i,j] = distance(XA[i], XB[j])
+
+    If coords2 is given, compute distance between each possible pair of the two collections 
+    of inputs: dist[i,j] = distance(X[i], X[j])
 
     Coordinates are assumed to be in Latitude, Longitude (WGS 84).
 
