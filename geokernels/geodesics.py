@@ -1,10 +1,10 @@
 """Geodesic distance calculation functions on a spheroid (WGS84).
 
 The recommended function is based on Vincenty's inverse method formula
-as implemented in the function geodesic_vincenty().
+as implemented in the function geodesic_vincenty and accelerated with numba.
 
 Alternative methods for computing geodesic distance via geopy or GeographicLib
-are available but are much slower based on preliminary testing.
+are available but seem much slower based on preliminary testing.
 (see test_geodesic.py in test functions)
 
 Requirements:
@@ -13,7 +13,7 @@ Requirements:
 - scipy
 
 
-Note on potential future upgrade: function geodist_dimwise() might be accelerated
+Potential future upgrade: function geodist_dimwise() might be accelerated
 by adding jit decorator, however scipy's pdist and cdist seem not to be supported 
 by numba-scipy yet.
 
@@ -22,9 +22,6 @@ References:
 - https://en.wikipedia.org/wiki/Vincenty's_formulae
 - https://en.wikipedia.org/wiki/World_Geodetic_System
 - https://en.wikipedia.org/wiki/Great-circle_distance
-
-Notes: the function geodesic_vincenty() is a refactored implementation of the 
-vincenty python package https://github.com/maurycyp/vincenty
 """
 
 # Author: Sebastian Haan
@@ -50,12 +47,16 @@ def geodesic_vincenty(point1, point2):
     Returns
     -------
     distance : float, in meters
+
+    Note: this function is an optimized implementation of the 
+    vincenty python package https://github.com/maurycyp/vincenty
     """
 
     # WGS84 ellipsoid parameters:
     a = 6378137  # meters
     f = 1 / 298.257223563
-    b = 6356752.314245  # meters; b = (1 - f)a
+    # b = (1 - f)a, in meters
+    b = 6356752.314245
 
     # Inverse method parameters:
     MAX_ITERATIONS = 100
@@ -86,10 +87,6 @@ def geodesic_vincenty(point1, point2):
         sigma = math.atan2(sinSigma, cosSigma)
         sinAlpha = cosU1 * cosU2 * sinLambda / sinSigma
         cosSqAlpha = 1 - sinAlpha ** 2 
-        # try:
-        #     cos2SigmaM = cosSigma - 2 * sinU1 * sinU2 / cosSqAlpha
-        # except:
-        #     cos2SigmaM = 0
         if cosSqAlpha != 0.:
             cos2SigmaM = cosSigma - 2 * sinU1 * sinU2 / cosSqAlpha
             C = f / 16 * cosSqAlpha * (4 + f * (4 - 3 * cosSqAlpha))
@@ -101,9 +98,9 @@ def geodesic_vincenty(point1, point2):
                                                (cos2SigmaM + C * cosSigma *
                                                 (-1 + 2 * cos2SigmaM ** 2)))
         if abs(Lambda - LambdaPrev) < CONVERGENCE_THRESHOLD:
-            break  # successful convergence
+            break 
     else:
-        return None  # failure to converge
+        return None  # no convergence
 
     uSq = cosSqAlpha * (a ** 2 - b ** 2) / (b ** 2)
     A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq)))
@@ -137,6 +134,7 @@ def geodist_dimwise(X):
     dist[:,:,0] = cdist(X[:,:2], X[:,:2], metric = lambda u, v: geodesic_vincenty(u, v))
     # compute Euclidean distance for remaining dimensions
     dist[:,:,1:] = X[:, np.newaxis, 2:] - X[np.newaxis, :, 2:]
+
     return dist
 
 
@@ -166,6 +164,7 @@ def geodesic_harvesine(u,v):
         - np.sin(np.radians(u[0] + v[0]) / 2)**2)
         * np.sin(dlng/2)**2
         )
+
     return 6371009 * 2 * np.arcsin(np.sqrt(dlat + dlng))
 
 
@@ -205,4 +204,5 @@ def geodist_dimwise_harvesine(X):
         )))**2
     # Compute the pairwise squared Euclidean distances between the data for any remaining dimensions
     sdist[:,:,2:] = (X[:, np.newaxis, 2:] - X[np.newaxis, :, 2:]) ** 2
+
     return sdist
