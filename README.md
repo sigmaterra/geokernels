@@ -1,7 +1,7 @@
-# geokernels: fast geo-spatial distance and geodesic kernel computation 
+# geokernels: fast geo-spatial distance and geodesic kernel computation for machine learning 
 This Python package provides fast geo-spatial distance computation and geodesic distance 
 kernels (e.g. for distance pairwise matrix calculation and Gaussian Process regressions). 
-The geodesic kernel package is tailored to integrate numpy asrrays and scikit-learn's 
+The geodesic kernel package is tailored to integrate geodesic kernels for scikit-learn's 
 Gaussian Process models and can be used as drop-in replacement for sklearn.gaussian_process.kernels. 
 
 Improvements over current geodesic distance implementations:
