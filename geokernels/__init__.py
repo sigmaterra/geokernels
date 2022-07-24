@@ -1,8 +1,19 @@
-"""geokernels: Geodesic kernels for Gaussian Process regression 
-This package is an extension of scikit-learn's gaussian_process kernel package
-sklearn.gaussian_process.kernels.py.
+"""geokernels: fast geo-spatial distance and geodesic kernel computation for machine learning  
 
-The following kernels are added to the default kernels as geodesic kernel versions:
+This Python package provides fast geo-spatial distance computation and geodesic distance 
+kernels (e.g. for distance pairwise matrix calculation and Gaussian Process regressions). 
+The geodesic kernel package is tailored to integrate geodesic kernels for scikit-learn's 
+Gaussian Process models and can be used as drop-in replacement for sklearn.gaussian_process.kernels. 
+
+Improvements over current geodesic distance implementations:
+- computational speed improvement of a factor of 50 to 150 in comparison to alternative Python packages 
+(geopy/geographilib), which is achieved via a numba accelerated inverse method of Vincenty's distance formula
+(see Examples below). This implementation includes an automatic fallback option to the slower geographiclib 
+algorithm in case of non-convergence of Vincenty's method (<0.01% of cases).
+- Support of Numpy arrays as input for multiple coordinates and distance matrix calculations.
+- Integration into scikit-learn Gaussian Process sklearn kernels.
+
+The following geodesic kernels are added to the default Gaussian Process sklearn kernels:
 
 - 'RBF_geo' (RBF kernel with geodesic distance metric)
 - 'Matern_geo' (Matern kernel with geodesic distance metric)
@@ -26,8 +37,9 @@ The geodesic distance is computed via Vincenty's solution to the inverse geodeti
 which is based on the WGS84 reference ellipsoid and is accurate to within 1 mm or better.
 While the accuracy is comparable with other libraries for geodesic distance calculation,
 such as GeographicLib/geopy, the geodesic distance computation implemented here is optimized 
-for speed and tailored towards integration into Gaussian Process regression with scikit-learn.
-For more details, please see references and documentation in sklearn_geokernels.geodesics.py.
+for speed and more suitable for computing large arrays such as needed for Gaussian Process 
+regression with scikit-learn.For more details, please see references and documentation in 
+sklearn_geokernels.geodesics.py.
 
 Both, anisotropic (one length-scale per feature) and isotropic (same length-scale for all features) 
 kernels are supported. One important difference in comparison to the default sklearn kernels is the 
@@ -36,43 +48,13 @@ for the geodesic distance, only one length-scale parameter is required instead o
 spatial dimensions (Latitude, Longitude) of the dataset. Thus, for an anisotropic kernel, the number 
 of length-scales is one less than the number of dimensions of the data. 
 
-Example
---------
-    
-#import standard libraries
-from sklearn.model_selection import train_test_split
-from sklearn.gaussian_process import GaussianProcessRegressor
-# Import kernels similar to importing sklearn.gaussian_process.kernels :
-from geokernels.kernels import RBF_geo, Matern_geo, RationalQuadratic_geo, WhiteKernel
-from geokernels.test_kernels import make_simdata1
-
-# Add data: needs to include in the first two columns Latitude (first) and Longitude (second) coordinates.
-# for testing use function make_simdata1 to generate 3 dim dataset (first two dimensions are Latitude, Longitude):
-X, y = make_simdata1(n_samples = 100, noise = 0.1) 
-
-# Split in train and test set
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
-
-# Define Kernel. Here we choose an anisotropic RBF kernel. Note that there is only one length-scale parameter for
-# the geodesic distance based on the combined first two features, Latitude and Longitude, and one length-scale
-# per remaining feature (in this case only one more). See description above
-kernel = 1.0 * (
-    RBF_geo(length_scale = [1e6, 1], length_scale_bounds = [(1e4, 1e7),(0.1, 1e4)]) 
-    + WhiteKernel(noise_level_bounds=(1e-4, 10)))
-
-gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=7)
-# Fit GP, which includes default hyperparameter optimization
-gp.fit(X_train, y_train)
-
-# Make predictions on test data
-y_pred, y_std = gp.predict(X_test, return_std=True)
-gp.score(X_test, y_test)
+Examples: see README: https://github.com/sigmaterra/geokernels
 """
 
-__version__ = '0.1.3'
+__version__ = '0.2.0'
 __author__ = 'Sebastian Haan'
 __title__ = "geokernels"
-__description__ = "Geodesic kernels for Gaussian Process regression"
+__description__ = "fast geo-spatial distance and geodesic kernel computation for machine learning"
 __uri__ = "https://github.com/sigmaterra/geokernels"
 __doc__ = __description__ + " <" + __uri__ + ">"
 __license__ = "MIT License"
