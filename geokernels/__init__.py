@@ -51,7 +51,7 @@ of length-scales is one less than the number of dimensions of the data.
 Examples: see README: https://github.com/sigmaterra/geokernels
 """
 
-__version__ = '0.2.0'
+__version__ = '0.2.1'
 __author__ = 'Sebastian Haan'
 __title__ = "geokernels"
 __description__ = "fast geo-spatial distance and geodesic kernel computation for machine learning"

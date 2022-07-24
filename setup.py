@@ -5,7 +5,7 @@ except ImportError:
 from os import path
 import io
 
-PYPI_VERSION = '0.2.0'
+PYPI_VERSION = '0.2.1'
 
 this_directory = path.abspath(path.dirname(__file__))
 with io.open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
@@ -26,7 +26,7 @@ if __name__ == "__main__":
           install_requires  = ['scikit_learn>=1.0',
                                 'numba>=0.53'],
           python_requires   = '>=3.8',
-          packages          = ['geokernels'],
+          packages          = packages,
           classifiers       = ['Programming Language :: Python :: 3',
                                 'Operating System :: OS Independent',
                                ]
