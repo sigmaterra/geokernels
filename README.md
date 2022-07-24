@@ -10,7 +10,7 @@ Improvements over current geodesic distance implementations:
 (see Examples below). This implementation includes an automatic fallback option to the slower geographiclib 
 algorithm in case of non-convergence of Vincenty's method (<0.01% of cases).
 - Support of Numpy arrays as input for multiple coordinates and distance matrix calculations.
-- Integration into scikit-learn Gaussian Process sklearn kernels
+- Integration into scikit-learn Gaussian Process sklearn kernels.
 
 The following geodesic kernels are added to the default Gaussian Process sklearn kernels:
 
