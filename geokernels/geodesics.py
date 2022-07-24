@@ -1,11 +1,14 @@
 """Geodesic distance calculation functions on a spheroid (WGS84).
 
 The recommended function is based on Vincenty's inverse method formula
-as implemented in the function geodesic_vincenty and accelerated with numba.
+as implemented in the function geodesic_vincenty_inverse and accelerated with numba.
 
 Alternative methods for computing geodesic distance via geopy or GeographicLib
-are available but seem much slower based on preliminary testing.
-(see test_geodesic.py in test functions)
+are much slower (see README and test_geodesics.py).
+
+However, in a few cases (<0.01%) Vincenty's inverse method can fail to converge, and
+a fallback option using the slower geographiclib solution is implemented. 
+
 
 Requirements:
 - numpy
@@ -13,15 +16,22 @@ Requirements:
 - scipy
 
 
-Potential future upgrade: function geodist_dimwise() might be accelerated
+Potential future upgrade: 
+- function geodist_dimwise() might be accelerated
 by adding jit decorator, however scipy's pdist and cdist seem not to be supported 
 by numba-scipy yet.
+- geographiclib numba acceleration is not yet implemented.
+
 
 References:
 
 - https://en.wikipedia.org/wiki/Vincenty's_formulae
 - https://en.wikipedia.org/wiki/World_Geodetic_System
 - https://en.wikipedia.org/wiki/Great-circle_distance
+- https://github.com/geographiclib/geographiclib
+- Karney, Charles F. F. (January 2013). "Algorithms for geodesics". Journal of Geodesy. 87 (1): 43–55. 
+arXiv:1109.4448. Bibcode:2013JGeod..87...43K. doi:10.1007/s00190-012-0578-z. Addenda.
+
 """
 
 # Author: Sebastian Haan
@@ -31,9 +41,11 @@ import numpy as np
 from scipy.spatial.distance import pdist, cdist
 from numba import jit
 
+from .geographiclib2.geodesic import Geodesic as geodesic_gglib
+
 
 @jit(nopython=True)
-def geodesic_vincenty(point1, point2):
+def geodesic_vincenty_inverse(point1, point2):
     """
     Compute the geodesic distance between two points on the 
     surface of a spheroid (WGS84) based on Vincenty's formula 
@@ -59,7 +71,7 @@ def geodesic_vincenty(point1, point2):
     b = 6356752.314245
 
     # Inverse method parameters:
-    MAX_ITERATIONS = 100
+    MAX_ITERATIONS = 200
     CONVERGENCE_THRESHOLD = 1e-11
 
     # short-circuit coincident points
@@ -100,6 +112,7 @@ def geodesic_vincenty(point1, point2):
         if abs(Lambda - LambdaPrev) < CONVERGENCE_THRESHOLD:
             break 
     else:
+        #print('convergence', abs(Lambda - LambdaPrev)/ CONVERGENCE_THRESHOLD)
         return None  # no convergence
 
     uSq = cosSqAlpha * (a ** 2 - b ** 2) / (b ** 2)
@@ -111,6 +124,33 @@ def geodesic_vincenty(point1, point2):
     s = b * A * (sigma - deltaSigma)
 
     return round(s, 6)
+
+
+def geodesic_vincenty(p1, p2):
+    """
+    Compute the geodesic distance between two points on the
+    surface of a spheroid (WGS84) based on Vincenty's formula
+    for the inverse geodetic problem[0].
+
+    In the unlikely case Vincenty's inverse method fails to converge,
+    the geographiclib algorithm is used instead.
+
+    Parameters
+    ----------
+    p1 : (latitude_1, longitude_1)
+    p2 : (latitude_2, longitude_2)
+
+    Returns
+    -------
+    distance : float, in meters
+    """
+    d = geodesic_vincenty_inverse(p1, p2)
+    if d is None:
+        # in case vincenty fails to converge, use geographiclib
+        return geodesic_gglib.WGS84.Inverse(p1[0], p1[1], p2[0], p2[1])['s12']
+    else:
+        return d
+
 
 
 def geodist_dimwise(X):
@@ -138,13 +178,15 @@ def geodist_dimwise(X):
     return dist
 
 
+
+@jit(nopython=True)
 def geodesic_harvesine(u,v):
     """
     Compute the geodesic distance squared between two points
     based on Harvesine formula. 
     
-    Note: Unstable and much less accurate than Vincenty's inverse method.
-    Only used for testing.
+    less accurate than Vincenty's inverse method.
+    Only used if Vincenty does not converge
 
     Parameters
     ----------
@@ -166,6 +208,63 @@ def geodesic_harvesine(u,v):
         )
 
     return 6371009 * 2 * np.arcsin(np.sqrt(dlat + dlng))
+
+
+
+@jit(nopython=True)
+def geodesic_harvesine2(u,v):
+    """
+    Compute the geodesic distance squared between two points
+    based on Harvesine formula. math version
+    
+    less accurate than Vincenty's inverse method.
+    Only used if Vincenty does not converge
+
+    Parameters
+    ----------
+    u : (latitude_1, longitude_1)
+    v : (latitude_2, longitude_2)
+
+    Returns
+    -------
+    distance : float, in meters
+    """
+    # Compute the haversine formula for latitude and longitude
+    dlat = math.radians(u[0] - v[0])
+    dlng = math.radians(u[1] - v[1])
+    dlat = math.sin(dlat/2)**2
+    dlng = (
+        (1 - math.sin(dlat/2)**2
+        - math.sin(math.radians(u[0] + v[0]) / 2)**2)
+        * math.sin(dlng/2)**2
+        )
+
+    return 6371009 * 2 * math.asin(math.sqrt(dlat + dlng))
+
+
+@jit(nopython=True)
+def geodesic_vincenty_harvesine(p1, p2):
+    """
+    Compute the geodesic distance between two points on the
+    surface of a spheroid (WGS84) based on Vincenty's formula.
+
+    This method uses here Harvesine solution as fallback for 
+    Vincenty's inverse method in case of non-convergence.
+
+    Parameters
+    ----------
+    p1 : (latitude_1, longitude_1)
+    p2 : (latitude_2, longitude_2)
+
+    Returns
+    -------
+    distance : float, in meters
+    """
+    d = geodesic_vincenty_start(p1, p2)
+    if d is None:
+        return geodesic_harvesine2(p1, p2)
+    else:
+        return d
 
 
 def geodist_dimwise_harvesine(X):
