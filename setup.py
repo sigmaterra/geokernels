@@ -5,7 +5,7 @@ except ImportError:
 from os import path
 import io
 
-PYPI_VERSION = '0.1.3'
+PYPI_VERSION = '0.2.0'
 
 this_directory = path.abspath(path.dirname(__file__))
 with io.open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
@@ -19,7 +19,7 @@ if __name__ == "__main__":
           author_email      = "sebhaan@sigmaterra.com",
           url               = "https://github.com/sigmaterra/geokernels",
           version           = PYPI_VERSION ,
-          description       = "Geodesic Gaussian Process kernels for scikit-learn",
+          description       = "fast geo-spatial distance and geodesic kernel computation for machine learning",
           long_description  = long_description,
           long_description_content_type='text/markdown',
           license           = 'MIT',
