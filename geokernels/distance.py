@@ -1,12 +1,17 @@
 """Computation of geospatial distances (WGS84).
 
+Coordinates are assumed to be in Latitude and Longitude (WGS 84).
+Accepting numpy arrays as input.
+
 The geospatial distance calculation is based on Vincenty's inverse method formula
 and accelerated with Numba (see geokernels.geodesics.geodesic_vincenty and references).
 
-Coordinates are assumed to be in Latitude and Longitude (WGS 84).
+In a few cases (<0.01%) Vincenty's inverse method can fail to converge, and
+a fallback option using the slower geographiclib solution is implemented.
+
 
 Functions included:
-geodist: returns list of distances between points of two lists: 
+- geodist: returns list of distances between points of two lists: 
 dist[i] = distance(XA[i], XB[i])
 
 geodist_matrix: returns distance matrix between all possible combinations of 
@@ -20,6 +25,9 @@ see geokernels.test_geodesics for test functions).
 References:
 
 - https://en.wikipedia.org/wiki/Vincenty's_formulae
+- https://geographiclib.sourceforge.io/
+- Karney, Charles F. F. (January 2013). "Algorithms for geodesics". Journal of Geodesy. 87 (1): 43–55. 
+arXiv:1109.4448. Bibcode:2013JGeod..87...43K. doi:10.1007/s00190-012-0578-z. Addenda.
 """
 
 # Author: Sebastian Haan
@@ -41,14 +49,14 @@ def geodist(coords1, coords2, metric = 'meter'):
 
     Parameters
     -----------
-    coords1: (lat, long), floats or array with shape (n_points1, 2)
-    coords2: (lat, long), floats or array with shape (n_points2, 2)
+    coords1: (lat, long), list or array with shape (n_points1, 2) for multiple points
+    coords2: (lat, long), list or array with shape (n_points2, 2) for multiple points
         coords1.shape = coords2.shape
     metric: 'meter', 'km', 'mile', 'nmi'
 
     Return
     ------
-    dist: float or numpy array, distance(s) between points, shape = (n_points,)
+    dist: float or numpy array, distance(s) between points, length = n_points
     """
     coords1 = np.asarray(coords1)
     coords2 = np.asarray(coords2)
