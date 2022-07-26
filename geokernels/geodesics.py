@@ -264,10 +264,43 @@ def great_circle(u, v):
     sin_lat1, cos_lat1 = math.sin(lat1), math.cos(lat1)
     sin_lat2, cos_lat2 = math.sin(lat2), math.cos(lat2)
 
-    delta_lng = lng2 - lng1
+    delta_lng = abs(lng2 - lng1)
     cos_delta_lng, sin_delta_lng = math.cos(delta_lng), math.sin(delta_lng)
 
     d = math.atan2(math.sqrt((cos_lat2 * sin_delta_lng) ** 2 +
+                    (cos_lat1 * sin_lat2 -
+                    sin_lat1 * cos_lat2 * cos_delta_lng) ** 2),
+                sin_lat1 * sin_lat2 + cos_lat1 * cos_lat2 * cos_delta_lng)
+    
+    return 6371009 * d
+
+
+@jit(nopython=True)
+def great_circle_array(u, v):
+    """
+    Use spherical geometry to calculate the surface distance between
+    points.
+
+    Parameters
+    ----------
+    u : (latitude_1, longitude_1), floats or arrays of floats
+    v : (latitude_2, longitude_2), floats or arrays of floats
+
+    Returns
+    -------
+    distance : float, in meters
+    """
+
+    lat1, lng1 = np.radians(u[0]), np.radians(u[1])
+    lat2, lng2 = np.radians(v[0]), np.radians(v[1])
+
+    sin_lat1, cos_lat1 = np.sin(lat1), np.cos(lat1)
+    sin_lat2, cos_lat2 = np.sin(lat2), np.cos(lat2)
+
+    delta_lng = abs(lng2 - lng1)
+    cos_delta_lng, sin_delta_lng = np.cos(delta_lng), np.sin(delta_lng)
+
+    d = np.arctan2(np.sqrt((cos_lat2 * sin_delta_lng) ** 2 +
                     (cos_lat1 * sin_lat2 -
                     sin_lat1 * cos_lat2 * cos_delta_lng) ** 2),
                 sin_lat1 * sin_lat2 + cos_lat1 * cos_lat2 * cos_delta_lng)
