@@ -1,15 +1,28 @@
-"""geokernels: fast geo-spatial distance and geodesic kernel computation for machine learning  
+"""geokernels: fast geospatial distance and geodesic kernel computation for machine learning  
 
-This Python package provides fast geo-spatial distance computation and geodesic distance 
-kernels (e.g. for distance pairwise matrix calculation and Gaussian Process regressions). 
-The geodesic kernel package is tailored to integrate geodesic kernels for scikit-learn's 
-Gaussian Process models and can be used as drop-in replacement for sklearn.gaussian_process.kernels. 
+This Python package provides fast geospatial distance computation and geodesic distance 
+kernels to accelerate geospatial machine learning and distance matrix calculations.
+
+The included geodesic kernel package accepts WGS84 coordinates (Latitude, Longitude) and 
+extends scikit-learn's Gaussian Process kernels with geodesic kernels as drop-in replacement. 
+This solves the problem of continental scale modeling and requires no transformation into 
+suitable local projected coordinate systems beforehand.
+
+## Functionality
+
+The core functionalities are:
+- fast distance calculations (geodesic and Great-Circle) for coordinate arrays, including pairwise
+distance matrixes:
+    - `geokernels.distance.geodist`
+    - `geokernels.distance.geodist_matrix`
+    - `geokernels.distance.greatcircle`
+    - `geokernels.distance.greatcircle_matrix`
+- geodesic kernel package (see `geokernels.kernels`) 
 
 Improvements over current geodesic distance implementations:
 - computational speed improvement of a factor of 50 to 150 in comparison to alternative Python packages 
-(geopy/geographilib), which is achieved via a numba accelerated inverse method of Vincenty's distance formula
-(see Examples below). This implementation includes an automatic fallback option to the slower geographiclib 
-algorithm in case of non-convergence of Vincenty's method (<0.01% of cases).
+for geodesic distances (geopy/geographilib), which is achieved via a numba accelerated inverse method of 
+Vincenty's distance formula.
 - Support of Numpy arrays as input for multiple coordinates and distance matrix calculations.
 - Integration into scikit-learn Gaussian Process sklearn kernels.
 
@@ -38,8 +51,9 @@ which is based on the WGS84 reference ellipsoid and is accurate to within 1 mm o
 While the accuracy is comparable with other libraries for geodesic distance calculation,
 such as GeographicLib/geopy, the geodesic distance computation implemented here is optimized 
 for speed and more suitable for computing large arrays such as needed for Gaussian Process 
-regression with scikit-learn.For more details, please see references and documentation in 
-sklearn_geokernels.geodesics.py.
+regression with scikit-learn. This implementation includes an automatic fallback option to 
+the slower geographiclib algorithm in case of non-convergence of Vincenty's method (<0.01% of cases).
+
 
 Both, anisotropic (one length-scale per feature) and isotropic (same length-scale for all features) 
 kernels are supported. One important difference in comparison to the default sklearn kernels is the 
@@ -51,10 +65,10 @@ of length-scales is one less than the number of dimensions of the data.
 Examples: see README: https://github.com/sigmaterra/geokernels
 """
 
-__version__ = '0.2.1'
+__version__ = '0.2.2'
 __author__ = 'Sebastian Haan'
 __title__ = "geokernels"
-__description__ = "fast geo-spatial distance and geodesic kernel computation for machine learning"
+__description__ = "fast geospatial distance and geodesic kernel computation for machine learning"
 __uri__ = "https://github.com/sigmaterra/geokernels"
 __doc__ = __description__ + " <" + __uri__ + ">"
 __license__ = "MIT License"
