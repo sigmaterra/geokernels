@@ -1,14 +1,28 @@
-# geokernels: fast geo-spatial distance and geodesic kernel computation for machine learning 
-This Python package provides fast geo-spatial distance computation and geodesic distance 
-kernels (e.g. for distance pairwise matrix calculation and Gaussian Process regressions). 
-The geodesic kernel package is tailored to integrate geodesic kernels for scikit-learn's 
-Gaussian Process models and can be used as drop-in replacement for sklearn.gaussian_process.kernels. 
+# geokernels: fast geospatial distance and geodesic kernel computation for machine learning 
+This Python package provides fast geospatial distance computation and geodesic distance 
+kernels to accelerate geospatial machine learning and distance matrix calculations.
+
+The included geodesic kernel package accepts WGS84 coordinates (Latitude, Longitude) and 
+extends scikit-learn's Gaussian Process kernels with geodesic kernels as drop-in replacement. 
+This solves the problem of continental scale modeling and requires no transformation into 
+suitable local projected coordinate systems beforehand.
+
+
+## Functionality
+
+The core functionalities are:
+- fast distance calculations (geodesic and Great-Circle) for coordinate arrays, including pairwise
+distance matrixes:
+    - `geokernels.distance.geodist`
+    - `geokernels.distance.geodist_matrix`
+    - `geokernels.distance.greatcircle`
+    - `geokernels.distance.greatcircle_matrix`
+- geodesic kernel package: `geokernels.kernels` 
 
 Improvements over current geodesic distance implementations:
 - computational speed improvement of a factor of 50 to 150 in comparison to alternative Python packages 
-(geopy/geographilib), which is achieved via a numba accelerated inverse method of Vincenty's distance formula
-(see Examples below). This implementation includes an automatic fallback option to the slower geographiclib 
-algorithm in case of non-convergence of Vincenty's method (<0.01% of cases).
+for geodesic distances (geopy/geographilib), which is achieved via a numba accelerated inverse method of 
+Vincenty's distance formula.
 - Support of Numpy arrays as input for multiple coordinates and distance matrix calculations.
 - Integration into scikit-learn Gaussian Process sklearn kernels.
 
@@ -37,8 +51,9 @@ which is based on the WGS84 reference ellipsoid and is accurate to within 1 mm o
 While the accuracy is comparable with other libraries for geodesic distance calculation,
 such as GeographicLib/geopy, the geodesic distance computation implemented here is optimized 
 for speed and more suitable for computing large arrays such as needed for Gaussian Process 
-regression with scikit-learn.For more details, please see references and documentation in 
-sklearn_geokernels.geodesics.py.
+regression with scikit-learn. This implementation includes an automatic fallback option to 
+the slower geographiclib algorithm in case of non-convergence of Vincenty's method (<0.01% of cases).
+
 
 Both, anisotropic (one length-scale per feature) and isotropic (same length-scale for all features) 
 kernels are supported. One important difference in comparison to the default sklearn kernels is the 
@@ -55,7 +70,7 @@ of length-scales is one less than the number of dimensions of the data.
 pip install geokernels
 ```
 
-## Requirements
+### Requirements
 
 - scikit-learn
 - numba
@@ -66,9 +81,9 @@ pip install geokernels
 
 ``` python
 import numpy as np
-from geokernels.distance import geodist, geodist_matrix
+from geokernels.distance import geodist, geodist_matrix, greatcircle
 
-# Calculate Distance between two points:
+# Calculate geodesic distance between two points:
 newport_ri = (41.49008, -71.312796)
 cleveland_oh = (41.499498, -81.695391)
 dist_km = geodist(newport_ri, cleveland_oh, metric = 'km')
@@ -76,7 +91,14 @@ dist_miles = geodist(newport_ri, cleveland_oh, metric = 'mile')
 print(f"Geodesic distance: {dist_km:.3f} km or {dist_miles:.3f} miles")
 #Out: Geodesic distance: 866.455 km or 538.390 miles
 
-# Calculate distances between two numpy arrays of coordinates (row-wise).
+# Alternative: calculate Great-Circle distance between two points:
+# (less accurate than geodesic because of spherical approximation)
+dist_km = greatcircle(newport_ri, cleveland_oh, metric = 'km')
+dist_miles = greatcircle(newport_ri, cleveland_oh, metric = 'mile')
+print(f"Great-circle distance: {dist_km:.3f} km or {dist_miles:.3f} miles")
+#Out: Great-circle distance: 864.214 km or 536.998 miles
+
+# Calculate geodesic distances between two numpy arrays of coordinates (row-wise).
 # Distances are calculated as: dist[i] = distance(XA[i], XB[i])
 XA, XB = np.random.rand(1000, 2) * 180 - 90, np.random.rand(1000, 2) * 180 - 90 
 XA[:,1] *= 2 # longitude array A
@@ -85,13 +107,13 @@ dists = geodist(XA, XB, metric = 'km')
 print(f'Computed {len(dists)} distances with a mean distance of {dists.mean():.3f} km')
 #Out: Computed 1000 distances with a mean distance of 10019.851 km
 
-# Calculate distance matrix between all possible pairs of distances in array A.
+# Calculate geodesic distance matrix between all possible pairs of distances in array A.
 # Note: upper and lower triangel of matrix are the same and diagonal is zero
 dist_matrixA = geodist_matrix(XA, metric = 'meter')
 print(f'Computed {dist_matrixA.shape[0]} x {dist_matrixA.shape[1]} distance matrix')
 #Out: Computed 1000 x 1000 distance matrix
 
-# Calculate distance matrix between all possible pairs between array A and B.
+# Calculate geodesic distance matrix between all possible pairs between array A and B.
 dist_matrixAB = geodist_matrix(XA, XB, metric = 'km')
 print(f'Computed {dist_matrixAB.shape[0]} x {dist_matrixAB.shape[1]} distance matrix between XA and XB.') 
 #Out Computed 1000 x 1000 distance matrix between XA and XB.

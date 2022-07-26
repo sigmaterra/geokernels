@@ -179,7 +179,7 @@ def greatcircle(coords1, coords2, metric = 'meter'):
     else:
         raise ValueError(f'Metric {metric} not supported')
     if np.size(coords1) == 2:
-        return geodesic_vincenty(coords1, coords2) * conv_fac
+        return great_circle_array(coords1, coords2) * conv_fac
     if coords1.shape[1] != 2:
         raise ValueError('coords1 and coords2 must have at two dimensions: Latitude, Longitude ')
     if (abs(coords1[:,0]) > 90).any() | (abs(coords2[:,0]) > 90).any():
