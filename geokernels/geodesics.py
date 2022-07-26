@@ -180,10 +180,10 @@ def geodist_dimwise(X):
 
 
 @jit(nopython=True)
-def geodesic_harvesine(u,v):
+def harvesine_array(u,v):
     """
     Compute the geodesic distance squared between two points
-    based on Harvesine formula. 
+    based on Harvesine formula using spherical geometry. 
     
     less accurate than Vincenty's inverse method.
     Only used if Vincenty does not converge
@@ -198,24 +198,22 @@ def geodesic_harvesine(u,v):
     distance : float, in meters
     """
     # Compute the haversine formula for latitude and longitude
-    dlat = np.radians(u[0] - v[0])
-    dlng = np.radians(u[1] - v[1])
-    dlat = np.sin(dlat/2)**2
-    dlng = (
+    dlat = abs(np.radians(u[0] - v[0]))
+    dlng = abs(np.radians(u[1] - v[1]))
+    d = (np.sin(dlat/2)**2 + 
         (1 - np.sin(dlat/2)**2
         - np.sin(np.radians(u[0] + v[0]) / 2)**2)
         * np.sin(dlng/2)**2
         )
-
-    return 6371009 * 2 * np.arcsin(np.sqrt(dlat + dlng))
+    return 6371009 * 2 * np.arcsin(np.sqrt(d))
 
 
 
 @jit(nopython=True)
-def geodesic_harvesine2(u,v):
+def harvesine(u,v):
     """
     Compute the geodesic distance squared between two points
-    based on Harvesine formula. math version
+    based on Harvesine formula using spherical geometry
     
     less accurate than Vincenty's inverse method.
     Only used if Vincenty does not converge
@@ -230,16 +228,51 @@ def geodesic_harvesine2(u,v):
     distance : float, in meters
     """
     # Compute the haversine formula for latitude and longitude
-    dlat = math.radians(u[0] - v[0])
-    dlng = math.radians(u[1] - v[1])
-    dlat = math.sin(dlat/2)**2
-    dlng = (
+    lat1, lng1 = math.radians(u[0]), math.radians(u[1])
+    lat2, lng2 = math.radians(v[0]), math.radians(v[1])
+
+    dlat = abs(lat2 - lat1)
+    dlng = abs(lng2 - lng1)
+    d = (math.sin(dlat/2)**2 +
         (1 - math.sin(dlat/2)**2
-        - math.sin(math.radians(u[0] + v[0]) / 2)**2)
+        - math.sin((lat1 + lat2) / 2)**2)
         * math.sin(dlng/2)**2
         )
 
-    return 6371009 * 2 * math.asin(math.sqrt(dlat + dlng))
+    return 6371009 * 2 * math.asin(math.sqrt(d))
+
+
+@jit(nopython=True)
+def great_circle(u, v):
+    """
+    Use spherical geometry to calculate the surface distance between
+    points.
+
+    Parameters
+    ----------
+    u : (latitude_1, longitude_1)
+    v : (latitude_2, longitude_2)
+
+    Returns
+    -------
+    distance : float, in meters
+    """
+
+    lat1, lng1 = math.radians(u[0]), math.radians(u[1])
+    lat2, lng2 = math.radians(v[0]), math.radians(v[1])
+
+    sin_lat1, cos_lat1 = math.sin(lat1), math.cos(lat1)
+    sin_lat2, cos_lat2 = math.sin(lat2), math.cos(lat2)
+
+    delta_lng = lng2 - lng1
+    cos_delta_lng, sin_delta_lng = math.cos(delta_lng), math.sin(delta_lng)
+
+    d = math.atan2(math.sqrt((cos_lat2 * sin_delta_lng) ** 2 +
+                    (cos_lat1 * sin_lat2 -
+                    sin_lat1 * cos_lat2 * cos_delta_lng) ** 2),
+                sin_lat1 * sin_lat2 + cos_lat1 * cos_lat2 * cos_delta_lng)
+    
+    return 6371009 * d
 
 
 @jit(nopython=True)
@@ -262,7 +295,7 @@ def geodesic_vincenty_harvesine(p1, p2):
     """
     d = geodesic_vincenty_start(p1, p2)
     if d is None:
-        return geodesic_harvesine2(p1, p2)
+        return harvesine(p1, p2)
     else:
         return d
 
@@ -273,10 +306,8 @@ def geodist_dimwise_harvesine(X):
 
     The dimension wise distances are approximated using the haversine formula 
     to split distance metric in latitudinal and longitudinal component.
-    A mean earth radius of  6371.009 km is used.
-
-    Note: Unstable and much less accurate than Vincenty's inverse method.
-    Only used for testing.
+    Spherical geometry is used to approximate the surface distance wuth a
+    mean earth radius of 6371.009 km is used.
 
     Parameters
     ----------
@@ -289,11 +320,11 @@ def geodist_dimwise_harvesine(X):
     # Initialise distances to zero
     sdist = np.zeros((X.shape[0], X.shape[0],X.shape[1]))
     # Compute the haversine formula for latitude and longitude
-    dlat = np.radians(X[:, np.newaxis, 0] - X[np.newaxis, :, 0])
-    dlng = np.radians(X[:, np.newaxis, 1] - X[np.newaxis, :, 1])
+    dlat = abs(np.radians(X[:, np.newaxis, 0] - X[np.newaxis, :, 0]))
+    dlng = abs(np.radians(X[:, np.newaxis, 1] - X[np.newaxis, :, 1]))
 
     # delta latitude to meter
-    sdist[:,:,0] = (6371009 * 2 * np.arcsin(np.abs(np.sin(dlat/2))))**2
+    sdist[:,:,0] = (6371009 * 2 * np.arcsin(abs(np.sin(dlat/2))))**2
 
     # delta longitude to meter:
     sdist[:,:,1] = (6371009 * 2 * np.arcsin(np.sqrt(
@@ -305,3 +336,6 @@ def geodist_dimwise_harvesine(X):
     sdist[:,:,2:] = (X[:, np.newaxis, 2:] - X[np.newaxis, :, 2:]) ** 2
 
     return sdist
+
+
+
